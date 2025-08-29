@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DollarSign, Copy, Share2, Clock, RefreshCw } from 'lucide-react';
-import { saveCalculation, getCalculations } from '@/utils/calculations';
+import { saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
 interface ExchangeRate {
   [key: string]: number;
@@ -31,7 +31,7 @@ export default function CurrencyConverter() {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate>({});
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('currency'));
@@ -68,7 +68,7 @@ export default function CurrencyConverter() {
     }
   };
 
-  const convertCurrency = () => {
+  const convertCurrency = useCallback(() => {
     const amountValue = parseFloat(amount);
     
     if (isNaN(amountValue) || amountValue <= 0) {
@@ -88,30 +88,30 @@ export default function CurrencyConverter() {
     setResult(convertedAmount);
 
     // Save calculation
-    const calculation = {
-      amount: amountValue,
-      fromCurrency,
-      toCurrency,
-      result: convertedAmount,
-      rate: exchangeRates[toCurrency] / exchangeRates[fromCurrency],
-    };
-    saveCalculation('currency', calculation);
+    saveCalculation('currency', {
+      fromValue: amountValue,
+      fromUnit: fromCurrency,
+      toValue: convertedAmount,
+      toUnit: toCurrency,
+      fromSymbol: fromCurrency,
+      toSymbol: toCurrency,
+    });
     setRecentCalculations(getCalculations('currency'));
-  };
+  }, [amount, fromCurrency, toCurrency, exchangeRates]);
 
   useEffect(() => {
     if (amount && exchangeRates[fromCurrency] && exchangeRates[toCurrency]) {
       convertCurrency();
     }
-  }, [amount, fromCurrency, toCurrency, exchangeRates]);
+  }, [amount, fromCurrency, toCurrency, exchangeRates, convertCurrency]);
 
   const handleCopy = async (text: string) => {
     await navigator.clipboard.writeText(text);
   };
 
   const handleShare = async () => {
-    const fromSymbol = currencies.find(c => c.code === fromCurrency)?.symbol || fromCurrency;
-    const toSymbol = currencies.find(c => c.code === toCurrency)?.symbol || toCurrency;
+          // const fromSymbol = currencies.find(c => c.code === fromCurrency)?.symbol || fromCurrency;
+      // const toSymbol = currencies.find(c => c.code === toCurrency)?.symbol || toCurrency;
     const text = `${amount} ${fromCurrency} = ${result?.toFixed(2)} ${toCurrency}`;
     
     if (navigator.share) {
@@ -285,10 +285,10 @@ export default function CurrencyConverter() {
                   className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <div className="text-sm text-gray-600 dark:text-gray-300">
-                    {calc.amount} {calc.fromCurrency}
+                    {calc.fromValue} {calc.fromSymbol}
                   </div>
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    = {calc.result.toFixed(2)} {calc.toCurrency}
+                    = {calc.toValue.toFixed(2)} {calc.toSymbol}
                   </div>
                 </div>
               ))}

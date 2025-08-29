@@ -1,6 +1,6 @@
 'use client';
 
-import { Copy, Share2, Clock } from 'lucide-react';
+import { Copy, Share2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface CalculatorCardProps {

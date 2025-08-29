@@ -2,22 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { Weight, Copy, Share2, RotateCcw } from 'lucide-react';
-import { weightConversions, saveCalculation, getCalculations } from '@/utils/calculations';
+import { weightConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
-const units = [
-  { value: 'kg', label: 'Kilograms (kg)', symbol: 'kg' },
-  { value: 'pounds', label: 'Pounds (lbs)', symbol: 'lbs' },
-  { value: 'ounces', label: 'Ounces (oz)', symbol: 'oz' },
-  { value: 'grams', label: 'Grams (g)', symbol: 'g' },
-  { value: 'tons', label: 'Tons (t)', symbol: 't' },
-];
+// const units = [
+//   { value: 'kg', label: 'Kilograms (kg)', symbol: 'kg' },
+//   { value: 'pounds', label: 'Pounds (lbs)', symbol: 'lbs' },
+//   { value: 'ounces', label: 'Ounces (oz)', symbol: 'oz' },
+//   { value: 'grams', label: 'Grams (g)', symbol: 'g' },
+//   { value: 'tons', label: 'Tons (t)', symbol: 't' },
+// ];
 
 export default function WeightConverter() {
   const [kg, setKg] = useState('');
   const [pounds, setPounds] = useState('');
   const [ounces, setOunces] = useState('');
   const [activeInput, setActiveInput] = useState<'kg' | 'pounds' | 'ounces'>('kg');
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('weight'));
@@ -54,15 +54,18 @@ export default function WeightConverter() {
     }
 
     // Save calculation
-    const calculation = {
-      input: { value: numValue, unit: type },
-      output: {
-        kg: type === 'kg' ? numValue : parseFloat(weightConversions[type].kg(numValue).toFixed(2)),
-        pounds: type === 'pounds' ? numValue : parseFloat(weightConversions[type].pounds(numValue).toFixed(2)),
-        ounces: type === 'ounces' ? numValue : parseFloat(weightConversions[type].ounces(numValue).toFixed(2)),
-      }
-    };
-    saveCalculation('weight', calculation);
+    const kgValue = type === 'kg' ? numValue : parseFloat(weightConversions[type].kg(numValue).toFixed(2));
+    // const poundsValue = type === 'pounds' ? numValue : parseFloat(weightConversions[type].pounds(numValue).toFixed(2));
+    // const ouncesValue = type === 'ounces' ? numValue : parseFloat(weightConversions[type].ounces(numValue).toFixed(2));
+    
+    saveCalculation('weight', {
+      fromValue: numValue,
+      fromUnit: type,
+      toValue: kgValue,
+      toUnit: 'kg',
+      fromSymbol: type === 'kg' ? 'kg' : type === 'pounds' ? 'lbs' : 'oz',
+      toSymbol: 'kg',
+    });
     setRecentCalculations(getCalculations('weight'));
   };
 
@@ -192,10 +195,10 @@ export default function WeightConverter() {
                   className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <div className="text-sm text-gray-600 dark:text-gray-300">
-                    {calc.input.value} {calc.input.unit}
+                    {calc.fromValue} {calc.fromSymbol}
                   </div>
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    = {calc.output.kg}kg = {calc.output.pounds}lbs = {calc.output.ounces}oz
+                    = {calc.toValue} {calc.toSymbol}
                   </div>
                 </div>
               ))}

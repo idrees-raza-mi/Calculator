@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { HelpCircle, Calculator, Thermometer, Ruler, Weight, DollarSign, Heart, Zap, Shield, Smartphone } from 'lucide-react';
 
 const faqs = [
@@ -104,7 +105,7 @@ export default function FAQ() {
             Still have questions?
           </h2>
           <p className="text-blue-100 mb-6">
-            If you couldn't find the answer you're looking for, feel free to reach out to us.
+            If you couldn&apos;t find the answer you&apos;re looking for, feel free to reach out to us.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
@@ -113,12 +114,12 @@ export default function FAQ() {
             >
               Contact Support
             </a>
-            <a
+            <Link
               href="/"
               className="inline-flex items-center px-6 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-blue-600 transition-colors"
             >
               Back to Home
-            </a>
+            </Link>
           </div>
         </div>
 

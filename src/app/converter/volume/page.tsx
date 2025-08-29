@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Box, Copy, Share2, RotateCcw } from 'lucide-react';
-import { volumeConversions, saveCalculation, getCalculations } from '@/utils/calculations';
+import { volumeConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
 const units = [
   { value: 'liters', label: 'Liters (L)', symbol: 'L' },
@@ -17,7 +17,7 @@ export default function VolumeConverter() {
   const [toUnit, setToUnit] = useState('gallons');
   const [fromValue, setFromValue] = useState('');
   const [toValue, setToValue] = useState('');
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('volume'));
@@ -38,12 +38,14 @@ export default function VolumeConverter() {
 
     let result: number;
     
-    if (volumeConversions[from as keyof typeof volumeConversions] && 
-        volumeConversions[from as keyof typeof volumeConversions][to as keyof typeof volumeConversions.liters]) {
-      result = volumeConversions[from as keyof typeof volumeConversions][to as keyof typeof volumeConversions.liters](numValue);
+    // Try direct conversion first
+    const fromConversions = volumeConversions[from as keyof typeof volumeConversions];
+    if (fromConversions && to in fromConversions) {
+      result = (fromConversions as any)[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through liters
-      const toLiters = volumeConversions[from as keyof typeof volumeConversions]?.liters?.(numValue);
+      const fromConversions = volumeConversions[from as keyof typeof volumeConversions];
+      const toLiters = (fromConversions as any)?.liters?.(numValue);
       if (toLiters && volumeConversions.liters[to as keyof typeof volumeConversions.liters]) {
         result = volumeConversions.liters[to as keyof typeof volumeConversions.liters](toLiters);
       } else {

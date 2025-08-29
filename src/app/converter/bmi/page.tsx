@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Heart, Copy, Share2, Clock, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
-import { calculateBMI, getBMICategory, saveCalculation, getCalculations } from '@/utils/calculations';
+import { calculateBMI, getBMICategory, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
 export default function BMICalculator() {
   const [weight, setWeight] = useState('');
@@ -11,13 +11,13 @@ export default function BMICalculator() {
   const [heightUnit, setHeightUnit] = useState<'cm' | 'feet' | 'inches'>('cm');
   const [bmi, setBmi] = useState<number | null>(null);
   const [category, setCategory] = useState<string>('');
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('bmi'));
   }, []);
 
-  const calculateBMIScore = () => {
+  const calculateBMIScore = useCallback(() => {
     const weightValue = parseFloat(weight);
     const heightValue = parseFloat(height);
 
@@ -34,19 +34,20 @@ export default function BMICalculator() {
     setCategory(bmiCategory);
 
     // Save calculation
-    const calculation = {
-      weight: { value: weightValue, unit: weightUnit },
-      height: { value: heightValue, unit: heightUnit },
-      bmi: bmiValue,
-      category: bmiCategory,
-    };
-    saveCalculation('bmi', calculation);
+    saveCalculation('bmi', {
+      fromValue: weightValue,
+      fromUnit: weightUnit,
+      toValue: bmiValue,
+      toUnit: 'BMI',
+      fromSymbol: weightUnit === 'kg' ? 'kg' : 'lbs',
+      toSymbol: 'BMI',
+    });
     setRecentCalculations(getCalculations('bmi'));
-  };
+  }, [weight, height, weightUnit, heightUnit]);
 
   useEffect(() => {
     calculateBMIScore();
-  }, [weight, height, weightUnit, heightUnit]);
+  }, [weight, height, weightUnit, heightUnit, calculateBMIScore]);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -254,10 +255,10 @@ export default function BMICalculator() {
                   className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <div className="text-sm text-gray-600 dark:text-gray-300">
-                    {calc.weight.value}{calc.weight.unit} / {calc.height.value}{calc.height.unit}
+                    {calc.fromValue} {calc.fromSymbol}
                   </div>
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    BMI: {calc.bmi.toFixed(1)} ({calc.category})
+                    {calc.toValue.toFixed(1)} {calc.toSymbol}
                   </div>
                 </div>
               ))}

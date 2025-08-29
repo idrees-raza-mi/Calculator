@@ -283,11 +283,22 @@ export const getBMICategory = (bmi: number): string => {
   return 'Obese';
 };
 
+// Interface for calculation history
+export interface CalculationHistory {
+  fromValue: number;
+  fromUnit: string;
+  toValue: number;
+  toUnit: string;
+  fromSymbol?: string;
+  toSymbol?: string;
+  timestamp: string;
+}
+
 // LocalStorage utilities for saving calculations
-export const saveCalculation = (type: string, calculation: any) => {
+export const saveCalculation = (type: string, calculation: Omit<CalculationHistory, 'timestamp'>) => {
   const key = `calculations_${type}`;
   const existing = JSON.parse(localStorage.getItem(key) || '[]');
-  const newCalculation = {
+  const newCalculation: CalculationHistory = {
     ...calculation,
     timestamp: new Date().toISOString(),
   };
@@ -296,7 +307,7 @@ export const saveCalculation = (type: string, calculation: any) => {
   localStorage.setItem(key, JSON.stringify(updated));
 };
 
-export const getCalculations = (type: string) => {
+export const getCalculations = (type: string): CalculationHistory[] => {
   const key = `calculations_${type}`;
   return JSON.parse(localStorage.getItem(key) || '[]');
 };

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Square, Copy, Share2, RotateCcw } from 'lucide-react';
-import { areaConversions, saveCalculation, getCalculations } from '@/utils/calculations';
+import { areaConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
 const units = [
   { value: 'squareMeters', label: 'Square Meters (m²)', symbol: 'm²' },
@@ -17,7 +17,7 @@ export default function AreaConverter() {
   const [toUnit, setToUnit] = useState('squareFeet');
   const [fromValue, setFromValue] = useState('');
   const [toValue, setToValue] = useState('');
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('area'));
@@ -38,12 +38,14 @@ export default function AreaConverter() {
 
     let result: number;
     
-    if (areaConversions[from as keyof typeof areaConversions] && 
-        areaConversions[from as keyof typeof areaConversions][to as keyof typeof areaConversions.squareMeters]) {
-      result = areaConversions[from as keyof typeof areaConversions][to as keyof typeof areaConversions.squareMeters](numValue);
+    // Try direct conversion first
+    const fromConversions = areaConversions[from as keyof typeof areaConversions];
+    if (fromConversions && to in fromConversions) {
+      result = (fromConversions as any)[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through square meters
-      const toSquareMeters = areaConversions[from as keyof typeof areaConversions]?.squareMeters?.(numValue);
+      const fromConversions = areaConversions[from as keyof typeof areaConversions];
+      const toSquareMeters = (fromConversions as any)?.squareMeters?.(numValue);
       if (toSquareMeters && areaConversions.squareMeters[to as keyof typeof areaConversions.squareMeters]) {
         result = areaConversions.squareMeters[to as keyof typeof areaConversions.squareMeters](toSquareMeters);
       } else {

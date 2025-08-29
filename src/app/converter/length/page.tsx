@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Ruler, Copy, Share2, RotateCcw } from 'lucide-react';
-import { lengthConversions, saveCalculation, getCalculations } from '@/utils/calculations';
+import { lengthConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
-const units = [
-  { value: 'meters', label: 'Meters (m)', symbol: 'm' },
-  { value: 'feet', label: 'Feet (ft)', symbol: 'ft' },
-  { value: 'inches', label: 'Inches (in)', symbol: 'in' },
-  { value: 'kilometers', label: 'Kilometers (km)', symbol: 'km' },
-  { value: 'miles', label: 'Miles (mi)', symbol: 'mi' },
-  { value: 'yards', label: 'Yards (yd)', symbol: 'yd' },
-];
+// const units = [
+//   { value: 'meters', label: 'Meters (m)', symbol: 'm' },
+//   { value: 'feet', label: 'Feet (ft)', symbol: 'ft' },
+//   { value: 'inches', label: 'Inches (in)', symbol: 'in' },
+//   { value: 'kilometers', label: 'Kilometers (km)', symbol: 'km' },
+//   { value: 'miles', label: 'Miles (mi)', symbol: 'mi' },
+//   { value: 'yards', label: 'Yards (yd)', symbol: 'yd' },
+// ];
 
 export default function LengthConverter() {
   const [meters, setMeters] = useState('');
@@ -19,7 +19,7 @@ export default function LengthConverter() {
   const [inches, setInches] = useState('');
   const [kilometers, setKilometers] = useState('');
   const [activeInput, setActiveInput] = useState<'meters' | 'feet' | 'inches' | 'kilometers'>('meters');
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('length'));
@@ -66,16 +66,15 @@ export default function LengthConverter() {
     }
 
     // Save calculation
-    const calculation = {
-      input: { value: numValue, unit: type },
-      output: {
-        meters: type === 'meters' ? numValue : parseFloat(lengthConversions[type].meters(numValue).toFixed(2)),
-        feet: type === 'feet' ? numValue : parseFloat(lengthConversions[type].feet(numValue).toFixed(2)),
-        inches: type === 'inches' ? numValue : parseFloat(lengthConversions[type].inches(numValue).toFixed(2)),
-        kilometers: type === 'kilometers' ? numValue : parseFloat(lengthConversions[type].kilometers(numValue).toFixed(4)),
-      }
-    };
-    saveCalculation('length', calculation);
+    const metersValue = type === 'meters' ? numValue : parseFloat(lengthConversions[type].meters(numValue).toFixed(2));
+    saveCalculation('length', {
+      fromValue: numValue,
+      fromUnit: type,
+      toValue: metersValue,
+      toUnit: 'meters',
+      fromSymbol: type === 'meters' ? 'm' : type === 'feet' ? 'ft' : type === 'inches' ? 'in' : 'km',
+      toSymbol: 'm',
+    });
     setRecentCalculations(getCalculations('length'));
   };
 
@@ -223,10 +222,10 @@ export default function LengthConverter() {
                   className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <div className="text-sm text-gray-600 dark:text-gray-300">
-                    {calc.input.value} {calc.input.unit}
+                    {calc.fromValue} {calc.fromSymbol}
                   </div>
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    = {calc.output.meters}m = {calc.output.feet}ft = {calc.output.inches}in = {calc.output.kilometers}km
+                    = {calc.toValue} {calc.toSymbol}
                   </div>
                 </div>
               ))}

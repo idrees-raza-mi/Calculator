@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { HardDrive, Copy, Share2, RotateCcw } from 'lucide-react';
-import { dataConversions, saveCalculation, getCalculations } from '@/utils/calculations';
+import { dataConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
 const units = [
   { value: 'bytes', label: 'Bytes (B)', symbol: 'B' },
@@ -17,7 +17,7 @@ export default function DataConverter() {
   const [toUnit, setToUnit] = useState('gigabytes');
   const [fromValue, setFromValue] = useState('');
   const [toValue, setToValue] = useState('');
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('data'));
@@ -38,12 +38,14 @@ export default function DataConverter() {
 
     let result: number;
     
-    if (dataConversions[from as keyof typeof dataConversions] && 
-        dataConversions[from as keyof typeof dataConversions][to as keyof typeof dataConversions.bytes]) {
-      result = dataConversions[from as keyof typeof dataConversions][to as keyof typeof dataConversions.bytes](numValue);
+    // Try direct conversion first
+    const fromConversions = dataConversions[from as keyof typeof dataConversions];
+    if (fromConversions && to in fromConversions) {
+      result = (fromConversions as any)[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through bytes
-      const toBytes = dataConversions[from as keyof typeof dataConversions]?.bytes?.(numValue);
+      const fromConversions = dataConversions[from as keyof typeof dataConversions];
+      const toBytes = (fromConversions as any)?.bytes?.(numValue);
       if (toBytes && dataConversions.bytes[to as keyof typeof dataConversions.bytes]) {
         result = dataConversions.bytes[to as keyof typeof dataConversions.bytes](toBytes);
       } else {

@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Thermometer, Copy, Share2, Clock } from 'lucide-react';
-import { temperatureConversions, saveCalculation, getCalculations } from '@/utils/calculations';
+import { temperatureConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
 export default function TemperatureConverter() {
   const [celsius, setCelsius] = useState('');
   const [fahrenheit, setFahrenheit] = useState('');
   const [kelvin, setKelvin] = useState('');
   const [activeInput, setActiveInput] = useState<'celsius' | 'fahrenheit' | 'kelvin'>('celsius');
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('temperature'));
@@ -46,15 +46,15 @@ export default function TemperatureConverter() {
     }
 
     // Save calculation
-    const calculation = {
-      input: { value: numValue, unit: type },
-      output: {
-        celsius: type === 'celsius' ? numValue : parseFloat(temperatureConversions[type].celsius(numValue).toFixed(2)),
-        fahrenheit: type === 'fahrenheit' ? numValue : parseFloat(temperatureConversions[type].fahrenheit(numValue).toFixed(2)),
-        kelvin: type === 'kelvin' ? numValue : parseFloat(temperatureConversions[type].kelvin(numValue).toFixed(2)),
-      }
-    };
-    saveCalculation('temperature', calculation);
+    const celsiusValue = type === 'celsius' ? numValue : parseFloat(temperatureConversions[type].celsius(numValue).toFixed(2));
+    saveCalculation('temperature', {
+      fromValue: numValue,
+      fromUnit: type,
+      toValue: celsiusValue,
+      toUnit: 'celsius',
+      fromSymbol: type === 'celsius' ? '°C' : type === 'fahrenheit' ? '°F' : 'K',
+      toSymbol: '°C',
+    });
     setRecentCalculations(getCalculations('temperature'));
   };
 
@@ -184,10 +184,10 @@ export default function TemperatureConverter() {
                   className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <div className="text-sm text-gray-600 dark:text-gray-300">
-                    {calc.input.value} {calc.input.unit === 'celsius' ? '°C' : calc.input.unit === 'fahrenheit' ? '°F' : 'K'}
+                    {calc.fromValue} {calc.fromSymbol}
                   </div>
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    = {calc.output.celsius}°C = {calc.output.fahrenheit}°F = {calc.output.kelvin}K
+                    = {calc.toValue} {calc.toSymbol}
                   </div>
                 </div>
               ))}

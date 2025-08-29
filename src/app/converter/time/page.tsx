@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Clock, Copy, Share2, RotateCcw } from 'lucide-react';
-import { timeConversions, saveCalculation, getCalculations } from '@/utils/calculations';
+import { timeConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
 const units = [
   { value: 'seconds', label: 'Seconds (s)', symbol: 's' },
@@ -17,7 +17,7 @@ export default function TimeConverter() {
   const [toUnit, setToUnit] = useState('minutes');
   const [fromValue, setFromValue] = useState('');
   const [toValue, setToValue] = useState('');
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('time'));
@@ -38,12 +38,14 @@ export default function TimeConverter() {
 
     let result: number;
     
-    if (timeConversions[from as keyof typeof timeConversions] && 
-        timeConversions[from as keyof typeof timeConversions][to as keyof typeof timeConversions.seconds]) {
-      result = timeConversions[from as keyof typeof timeConversions][to as keyof typeof timeConversions.seconds](numValue);
+    // Try direct conversion first
+    const fromConversions = timeConversions[from as keyof typeof timeConversions];
+    if (fromConversions && to in fromConversions) {
+      result = (fromConversions as any)[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through seconds
-      const toSeconds = timeConversions[from as keyof typeof timeConversions]?.seconds?.(numValue);
+      const fromConversions = timeConversions[from as keyof typeof timeConversions];
+      const toSeconds = (fromConversions as any)?.seconds?.(numValue);
       if (toSeconds && timeConversions.seconds[to as keyof typeof timeConversions.seconds]) {
         result = timeConversions.seconds[to as keyof typeof timeConversions.seconds](toSeconds);
       } else {

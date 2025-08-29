@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Zap, Copy, Share2, RotateCcw } from 'lucide-react';
-import { speedConversions, saveCalculation, getCalculations } from '@/utils/calculations';
+import { speedConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
 const units = [
   { value: 'kmh', label: 'Kilometers per Hour (km/h)', symbol: 'km/h' },
@@ -16,7 +16,7 @@ export default function SpeedConverter() {
   const [toUnit, setToUnit] = useState('mph');
   const [fromValue, setFromValue] = useState('');
   const [toValue, setToValue] = useState('');
-  const [recentCalculations, setRecentCalculations] = useState<any[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
 
   useEffect(() => {
     setRecentCalculations(getCalculations('speed'));
@@ -37,12 +37,14 @@ export default function SpeedConverter() {
 
     let result: number;
     
-    if (speedConversions[from as keyof typeof speedConversions] && 
-        speedConversions[from as keyof typeof speedConversions][to as keyof typeof speedConversions.kmh]) {
-      result = speedConversions[from as keyof typeof speedConversions][to as keyof typeof speedConversions.kmh](numValue);
+    // Try direct conversion first
+    const fromConversions = speedConversions[from as keyof typeof speedConversions];
+    if (fromConversions && to in fromConversions) {
+      result = (fromConversions as any)[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through km/h
-      const toKmh = speedConversions[from as keyof typeof speedConversions]?.kmh?.(numValue);
+      const fromConversions = speedConversions[from as keyof typeof speedConversions];
+      const toKmh = (fromConversions as any)?.kmh?.(numValue);
       if (toKmh && speedConversions.kmh[to as keyof typeof speedConversions.kmh]) {
         result = speedConversions.kmh[to as keyof typeof speedConversions.kmh](toKmh);
       } else {
