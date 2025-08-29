@@ -9,7 +9,7 @@ A modern, responsive calculator and conversion website built with Next.js, TypeS
 - **Length Converter**: Meters ↔ Feet ↔ Inches ↔ Kilometers
 - **Weight Converter**: Kilograms ↔ Pounds ↔ Ounces
 - **Currency Converter**: Live exchange rates with 12+ currencies
-- **BMI Calculator**: Health insights with category classification
+- **BMI Calculator**: Health insights with category classifications
 
 ### User Experience
 - 🌙 **Dark/Light Mode**: Toggle between themes with persistent preference
