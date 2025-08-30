@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { Zap, Copy, Share2, RotateCcw } from 'lucide-react';
 import { speedConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
+// Type definitions for conversion functions
+type ConversionFunction = (value: number) => number;
+type ConversionUnit = Record<string, ConversionFunction>;
+
 const units = [
   { value: 'kmh', label: 'Kilometers per Hour (km/h)', symbol: 'km/h' },
   { value: 'mph', label: 'Miles per Hour (mph)', symbol: 'mph' },
@@ -38,15 +42,15 @@ export default function SpeedConverter() {
     let result: number;
     
     // Try direct conversion first
-    const fromConversions = speedConversions[from as keyof typeof speedConversions];
+    const fromConversions = speedConversions[from as keyof typeof speedConversions] as ConversionUnit;
     if (fromConversions && to in fromConversions) {
-      result = (fromConversions as any)[to](numValue);
+      result = fromConversions[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through km/h
-      const fromConversions = speedConversions[from as keyof typeof speedConversions];
-      const toKmh = (fromConversions as any)?.kmh?.(numValue);
+      const fromConversions = speedConversions[from as keyof typeof speedConversions] as ConversionUnit;
+      const toKmh = fromConversions?.kmh?.(numValue);
       if (toKmh && speedConversions.kmh[to as keyof typeof speedConversions.kmh]) {
-        result = speedConversions.kmh[to as keyof typeof speedConversions.kmh](toKmh);
+        result = (speedConversions.kmh as ConversionUnit)[to](toKmh);
       } else {
         setToValue('');
         return;

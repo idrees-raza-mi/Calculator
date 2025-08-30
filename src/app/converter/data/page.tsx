@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { HardDrive, Copy, Share2, RotateCcw } from 'lucide-react';
 import { dataConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
+// Type definitions for conversion functions
+type ConversionFunction = (value: number) => number;
+type ConversionUnit = Record<string, ConversionFunction>;
+
 const units = [
   { value: 'bytes', label: 'Bytes (B)', symbol: 'B' },
   { value: 'kilobytes', label: 'Kilobytes (KB)', symbol: 'KB' },
@@ -13,8 +17,8 @@ const units = [
 ];
 
 export default function DataConverter() {
-  const [fromUnit, setFromUnit] = useState('megabytes');
-  const [toUnit, setToUnit] = useState('gigabytes');
+  const [fromUnit, setFromUnit] = useState('bytes');
+  const [toUnit, setToUnit] = useState('kilobytes');
   const [fromValue, setFromValue] = useState('');
   const [toValue, setToValue] = useState('');
   const [recentCalculations, setRecentCalculations] = useState<CalculationHistory[]>([]);
@@ -39,15 +43,15 @@ export default function DataConverter() {
     let result: number;
     
     // Try direct conversion first
-    const fromConversions = dataConversions[from as keyof typeof dataConversions];
+    const fromConversions = dataConversions[from as keyof typeof dataConversions] as ConversionUnit;
     if (fromConversions && to in fromConversions) {
-      result = (fromConversions as any)[to](numValue);
+      result = fromConversions[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through bytes
-      const fromConversions = dataConversions[from as keyof typeof dataConversions];
-      const toBytes = (fromConversions as any)?.bytes?.(numValue);
+      const fromConversions = dataConversions[from as keyof typeof dataConversions] as ConversionUnit;
+      const toBytes = fromConversions?.bytes?.(numValue);
       if (toBytes && dataConversions.bytes[to as keyof typeof dataConversions.bytes]) {
-        result = dataConversions.bytes[to as keyof typeof dataConversions.bytes](toBytes);
+        result = (dataConversions.bytes as ConversionUnit)[to](toBytes);
       } else {
         setToValue('');
         return;

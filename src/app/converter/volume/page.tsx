@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { Box, Copy, Share2, RotateCcw } from 'lucide-react';
 import { volumeConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
+// Type definitions for conversion functions
+type ConversionFunction = (value: number) => number;
+type ConversionUnit = Record<string, ConversionFunction>;
+
 const units = [
   { value: 'liters', label: 'Liters (L)', symbol: 'L' },
   { value: 'gallons', label: 'Gallons (gal)', symbol: 'gal' },
@@ -39,15 +43,15 @@ export default function VolumeConverter() {
     let result: number;
     
     // Try direct conversion first
-    const fromConversions = volumeConversions[from as keyof typeof volumeConversions];
+    const fromConversions = volumeConversions[from as keyof typeof volumeConversions] as ConversionUnit;
     if (fromConversions && to in fromConversions) {
-      result = (fromConversions as any)[to](numValue);
+      result = fromConversions[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through liters
-      const fromConversions = volumeConversions[from as keyof typeof volumeConversions];
-      const toLiters = (fromConversions as any)?.liters?.(numValue);
+      const fromConversions = volumeConversions[from as keyof typeof volumeConversions] as ConversionUnit;
+      const toLiters = fromConversions?.liters?.(numValue);
       if (toLiters && volumeConversions.liters[to as keyof typeof volumeConversions.liters]) {
-        result = volumeConversions.liters[to as keyof typeof volumeConversions.liters](toLiters);
+        result = (volumeConversions.liters as ConversionUnit)[to](toLiters);
       } else {
         setToValue('');
         return;

@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { Clock, Copy, Share2, RotateCcw } from 'lucide-react';
 import { timeConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
+// Type definitions for conversion functions
+type ConversionFunction = (value: number) => number;
+type ConversionUnit = Record<string, ConversionFunction>;
+
 const units = [
   { value: 'seconds', label: 'Seconds (s)', symbol: 's' },
   { value: 'minutes', label: 'Minutes (min)', symbol: 'min' },
@@ -39,15 +43,15 @@ export default function TimeConverter() {
     let result: number;
     
     // Try direct conversion first
-    const fromConversions = timeConversions[from as keyof typeof timeConversions];
+    const fromConversions = timeConversions[from as keyof typeof timeConversions] as ConversionUnit;
     if (fromConversions && to in fromConversions) {
-      result = (fromConversions as any)[to](numValue);
+      result = fromConversions[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through seconds
-      const fromConversions = timeConversions[from as keyof typeof timeConversions];
-      const toSeconds = (fromConversions as any)?.seconds?.(numValue);
+      const fromConversions = timeConversions[from as keyof typeof timeConversions] as ConversionUnit;
+      const toSeconds = fromConversions?.seconds?.(numValue);
       if (toSeconds && timeConversions.seconds[to as keyof typeof timeConversions.seconds]) {
-        result = timeConversions.seconds[to as keyof typeof timeConversions.seconds](toSeconds);
+        result = (timeConversions.seconds as ConversionUnit)[to](toSeconds);
       } else {
         setToValue('');
         return;

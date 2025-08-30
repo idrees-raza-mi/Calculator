@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { Square, Copy, Share2, RotateCcw } from 'lucide-react';
 import { areaConversions, saveCalculation, getCalculations, CalculationHistory } from '@/utils/calculations';
 
+// Type definitions for conversion functions
+type ConversionFunction = (value: number) => number;
+type ConversionUnit = Record<string, ConversionFunction>;
+
 const units = [
   { value: 'squareMeters', label: 'Square Meters (m²)', symbol: 'm²' },
   { value: 'squareFeet', label: 'Square Feet (ft²)', symbol: 'ft²' },
@@ -39,15 +43,15 @@ export default function AreaConverter() {
     let result: number;
     
     // Try direct conversion first
-    const fromConversions = areaConversions[from as keyof typeof areaConversions];
+    const fromConversions = areaConversions[from as keyof typeof areaConversions] as ConversionUnit;
     if (fromConversions && to in fromConversions) {
-      result = (fromConversions as any)[to](numValue);
+      result = fromConversions[to](numValue);
     } else {
       // If direct conversion doesn't exist, convert through square meters
-      const fromConversions = areaConversions[from as keyof typeof areaConversions];
-      const toSquareMeters = (fromConversions as any)?.squareMeters?.(numValue);
+      const fromConversions = areaConversions[from as keyof typeof areaConversions] as ConversionUnit;
+      const toSquareMeters = fromConversions?.squareMeters?.(numValue);
       if (toSquareMeters && areaConversions.squareMeters[to as keyof typeof areaConversions.squareMeters]) {
-        result = areaConversions.squareMeters[to as keyof typeof areaConversions.squareMeters](toSquareMeters);
+        result = (areaConversions.squareMeters as ConversionUnit)[to](toSquareMeters);
       } else {
         setToValue('');
         return;
